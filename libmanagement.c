@@ -1,11 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <unistd.h> // clear-screen
 #include <string.h>
-#include "books.c"  // contain functions that involves the books
-#include "students.c"  // contains all functions that involve the book
-#define SIZE 40
+#include <time.h> // a header file to obtain system time
+#include <unistd.h> // clear-screen
+#include "books.h"  // contain functions that involves the books
+#include "students.h"  // contains all functions that involve the students
+#define SIZE 40 // a global string size
+
+
+
+
+/* 
+    N/B...TO LOG IN AS ADMIN (LIBRARIAN) TO VIEW MANY OF THE FUNCTIONALITIES WITHOUT DELETING THE FILES USE;
+    
+    USERNAME: chali
+    PASSWORD: chali
+    
+    Else: comment the verification part then access the system to add an admin then uncomment it.
+
+    Register part of this system registers the students (users) and not the admin.
+ */
+
+
+
+/* 
+    Group members:
+    
+    1. Otieno Christopher   -> S13/09426/17 (lead)
+    2. Wachiye Siranjofu    -> S13/09418/17
+    3. Christine Olondo     -> S13/09431/17
+    4. Collins Kilel        -> S13/10816/17
+    5. Nicholus Sila        -> S13/10780/17
+ */
+
+
+
 
 typedef struct
 {
@@ -19,10 +48,10 @@ typedef struct
 typedef struct 
 {
     char fname[40], lname[40], username[40], password[60];
-}   ADMIN;
+} ADMIN;
 
 
-FILE *studentPtr;
+// FILE *studentPtr = NULL;
 
 void menu (void);
 void time2(void);
@@ -31,6 +60,8 @@ void login (void);
 void addAdmin(void);
 void viewAdmin(void);
 void deleteAdmin(void);
+int leap_year(int year);
+void boro_return_date(int day, int month, int year, int *r_d, int *r_m, int *r_y);
 
 // main function: the program starts executing here
 int main (void) 
@@ -77,7 +108,7 @@ int main (void)
             main();
             break;
     
-        default:
+        case 0:
             system("clear");
 
             puts("\v\v\v\v\t\t\t\tjust a second (saving changes)... \n");
@@ -89,6 +120,9 @@ int main (void)
             system("clear");
             // exit the program
             exit(1);
+            break;
+        default:
+            main();
             break;
     }     
 }
@@ -154,7 +188,7 @@ void login(void)
                     printf("\t\t\t\tError: Wrong cridentials. \n");
                     printf("\t\t\t_______________________________________________________________________________________________\n\n");
                     sleep(2);
-                    main();
+                    login();
                 }  
 
             }
@@ -195,14 +229,17 @@ void login(void)
                     printf("\t\t\t_______________________________________________________________________________________________\n\n");
 
                     sleep(3);
-                    main();
+                    login();
                 }
-            fclose(studentPtr);
+                fclose(studentPtr);
             
             }
             break;
-        default:
+        case 0:
             main();
+            break;
+        default:
+            login();
             break;
     }
 
@@ -259,9 +296,11 @@ void user(void)
             updateStudent();
             user();
             break;
-    
-        default:
+        case 0:
             main();    
+            break;
+        default:
+            user();
             break;
     }
 }
@@ -271,9 +310,9 @@ void time2(void)
 {
     time_t t = time(NULL);
         struct tm tm = *localtime(&t);
-        printf("\v\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tTime is: %d:%d:%d\ton: %d-%d-%d \n", 
+        printf("\v\t\t\t\t\t\t\t\t\tTime is: %d:%d:%d\ton: %d-%d-%d \n", 
             tm.tm_hour, tm.tm_min, tm.tm_sec,
-            tm.tm_mday, tm.tm_mon,tm.tm_year + 1900);
+            tm.tm_mday, tm.tm_mon + 1,tm.tm_year + 1900);
 }
 
 // admin view 
@@ -398,7 +437,6 @@ void menu(void)
         break;
     default:
         puts("Invalid entry");
-        sleep(2);
         menu();
         break;
     }
@@ -442,7 +480,7 @@ void addAdmin(void)
             scanf("%39s%39s", admin.fname, admin.lname);
             strcpy(admin.username,user_name);
 
-            printf("\v\v\t\t\tEnter the username and passworsd (eg chrisly s13/09426@17)\t->\t");
+            printf("\v\v\t\t\tEnter the passworsd (eg chrisly s13/09426@17)\t->\t");
             scanf("%59s", admin.password);
 
             fwrite(&admin, sizeof(ADMIN), 1, userPtr);
@@ -473,10 +511,10 @@ void viewAdmin(void)
             puts("\t\t\t\t\t\t\t First_name\t\t  Last_name\t\t      User_name");
             puts("\t\t\t\t\t\t_________________________________________________________________________________________________\v");
         while(!feof(userPtr)){
-            // puts("was here");
             ADMIN admin;
             int result = fread(&admin, sizeof(ADMIN), 1, userPtr);
-            if (result != 0 && strcmp(admin.fname, "") != 0) {
+            if (result != 0 && ((strcmp(admin.fname, "") != 0) || (strcmp(admin.lname, "") != 0) || (strcmp(admin.username, "") != 0))) 
+            {
                 printf("\t\t\t\t %30s%30s%30s\n", admin.fname, admin.lname, admin.username);
                 puts("\t\t\t\t\t\t`````````````````````````````````````````````````````````````````````````````````````````````````");
 
@@ -575,4 +613,63 @@ void deleteAdmin(void)
             // go to the customized view
         }
     }
+}
+
+// generates return date
+void boro_return_date(int day, int month ,int year ,int *r_d, int *r_m, int *r_y)
+{
+    // int max_days = 14;// maximum days a student can have a book
+
+    int month_days[12] = {31,28,31,30,31,30,31,31,30,31,30,31};// number of days of months chronologically
+    
+    // loop to increment date upto max_days
+    for(int i = 0; i < 14; i++)
+    {
+        // increment date
+        day++;
+        *r_d = day; // return day
+
+        // assign return year to current year
+        *r_y = year; // return year
+
+
+        /* 
+            check if days are beyond the days of the month
+            check if the month is feb
+            check if the year is a leap year
+            month-1 gives the index of the current month days in the array
+         */
+        
+        if (day > month_days[month - 1] || (month == 2 && day == 29 && !leap_year(year))) 
+        {
+            // go to first day of a month
+            day = 1;
+            *r_d = day; // return day
+
+            // go to the next month
+            month++;
+            *r_m = month; // return month
+
+            // go to the next year if month is 13
+            if(month == 13)
+            {
+                // go the first month
+                month = 1 ;
+                *r_m = month; // return month
+
+                // increment year
+                year++;
+                *r_y = year; // return year
+            }
+        }
+    }
+}
+
+// a function to calculate and check for a leap year
+int leap_year(int year)
+{
+    if ( year % 4 == 0 && ( year % 100 == 0 || year % 400 == 0 ) ) 
+        return 1;
+    else         
+        return 0;
 }
